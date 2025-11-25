@@ -46,5 +46,26 @@ class DistributionService:
         if not candidates:
             return None
 
-        ops, weights = zip(*candidates)
-        return random.choices(ops, weights=weights, k=1)[0]
+        while candidates:
+            ops, weights = zip(*candidates)
+            candidate = random.choices(ops, weights=weights, k=1)[0]
+
+            # блокируем выбранного оператора до конца транзакции
+            await session.execute(
+                select(Operator.id)
+                .where(Operator.id == candidate.id)
+                .with_for_update()
+            )
+
+            active_cnt = await self.contact_repo.count_active_by_operator(
+                session, candidate.id
+            )
+            if active_cnt < candidate.max_active_contacts:
+                return candidate
+
+            # текущая нагрузка уже на лимите — пробуем выбрать другого
+            candidates = [
+                (op, w) for op, w in candidates if op.id != candidate.id
+            ]
+
+        return None

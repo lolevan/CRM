@@ -55,7 +55,7 @@ class ContactService:
             lead_id=lead.id,
             source_id=source.id,
             operator_id=operator.id if operator else None,
-            status=ContactStatus.new,
+            status=ContactStatus.active,
             payload=payload,
         )
         await self._contact_repo.create(session, contact)
