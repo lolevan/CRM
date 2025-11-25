@@ -14,6 +14,7 @@ async def test_register_contact_creates_lead_and_contact(client):
     })).json()
 
     assert c["operator_id"] == op["id"]
+    assert c["status"] == "active"
 
     leads = (await client.get("/api/v1/leads")).json()
     assert len(leads) == 1
@@ -28,3 +29,4 @@ async def test_no_operators_creates_contact_without_operator(client):
         "source_code": "empty"
     })).json()
     assert c["operator_id"] is None
+    assert c["status"] == "active"
